@@ -1,21 +1,21 @@
 spring:
   application:
     name: user-service
+
   datasource:
-    # Connects via localhost:5433 to map to your docker postgres_db instance
-    url: jdbc:postgresql://${DB_HOST:localhost}:5433/gurukul_db
+    url: jdbc:postgresql://${DB_HOST:localhost}:5433/${DB_NAME:gurukul_db}
     username: ${DB_USER:gurukul}
     password: ${DB_PASSWORD:tutor}
     driver-class-name: org.postgresql.Driver
 
-    jpa:
-      database-platform: org.hibernate.dialect.PostgreSQLDialect
-      hibernate:
-        ddl-auto: update # Automatically creates/updates database tables based on entity definitions
-      show-sql: true     # Prints SQL logs to the console (highly useful for local debugging)
-      properties:
-        hibernate:
-          format_sql: true # Formats the console SQL logs so they are easy to read
+  jpa:
+    open-in-view: false
+    # In Spring Boot 4, use vendor-properties directly to pass actions straight to Hibernate 7
+    vendor-properties:
+      hibernate.hbm2ddl.auto: update
+      hibernate.show_sql: true
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: 8090
