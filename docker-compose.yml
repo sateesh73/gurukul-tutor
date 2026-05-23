@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ----------------------------------------------------
   # PostgreSQL Database
@@ -41,9 +39,9 @@ services:
       KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:29092'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data' # Point this to your mounted volume instead of /tmp
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      CLUSTER_ID: 'gurukul-tutor-cluster-1'
+      KAFKA_CLUSTER_ID: '4L62YDgNTmqny9StEx7Tqg' # Changed to a valid 22-character base64 ID
     volumes:
       - kafka_volume:/var/lib/kafka/data
     networks:
