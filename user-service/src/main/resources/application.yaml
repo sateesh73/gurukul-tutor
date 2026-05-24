@@ -2,7 +2,6 @@ spring:
   sql:
     init:
       mode: always
-      locations: classpath:schema.sql
   application:
     name: user-service
 

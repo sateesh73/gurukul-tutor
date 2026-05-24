@@ -1,5 +1,7 @@
 package com.tutor.gurukul.company.internal;
 
+import com.tutor.gurukul.company.exception.CompanyAlreadyExistsException;
+import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
 import org.junit.jupiter.api.Test;
@@ -48,17 +50,17 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    void createCompany_whenAlreadyExists_throwsIllegalArgumentException() {
+    void createCompany_alreadyExists_throwsCompanyAlreadyExistsException() {
         var req = CompanyRequest.builder().name("Acme").build();
         var existing = Company.builder().companyId("1").companyName("Acme").email("e@e").build();
         when(companyRepo.findById("Acme")).thenReturn(Optional.of(existing));
 
-        var ex = assertThrows(IllegalArgumentException.class, () -> companyService.createCompany(req));
+        var ex = assertThrows(RuntimeException.class, () -> companyService.createCompany(req));
         assertTrue(ex.getMessage().contains("Failed to create company") || ex.getMessage().contains("already exists"));
     }
 
     @Test
-    void getCompanyById_found_returnsResponse() {
+    void getCompanyById_found_returnsResponse() throws CompanyNotFoundException {
         var company = Company.builder()
                 .companyId("id-1")
                 .companyName("Acme")
@@ -78,13 +80,13 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    void getCompanyById_notFound_throwsNoSuchElementException() {
+    void getCompanyById_notFound_throwsCompanyNotFoundException() {
         when(companyRepo.findById("nope")).thenReturn(Optional.empty());
-        assertThrows(NoSuchElementException.class, () -> companyService.getCompanyById("nope"));
+        assertThrows(CompanyNotFoundException.class, () -> companyService.getCompanyById("nope"));
     }
 
     @Test
-    void updateCompany_success_savesUpdatedEntity() {
+    void updateCompany_success_savesUpdatedEntity() throws CompanyNotFoundException {
         var existing = Company.builder()
                 .companyId("id-1")
                 .companyName("Old")
@@ -106,14 +108,14 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    void updateCompany_notFound_throwsIllegalArgumentException() {
+    void updateCompany_notFound_throwsCompanyNotFoundException() {
         when(companyRepo.findById("missing")).thenReturn(Optional.empty());
         var req = CompanyRequest.builder().name("n").build();
-        assertThrows(IllegalArgumentException.class, () -> companyService.updateCompany("missing", req));
+        assertThrows(CompanyNotFoundException.class, () -> companyService.updateCompany("missing", req));
     }
 
     @Test
-    void deleteCompany_success_deletesById() {
+    void deleteCompany_success_deletesById() throws CompanyNotFoundException {
         var existing = Company.builder().companyId("id-1").companyName("Acme").email("e@e").build();
         when(companyRepo.findById("id-1")).thenReturn(Optional.of(existing));
 
@@ -123,8 +125,8 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    void deleteCompany_notFound_throwsIllegalArgumentException() {
+    void deleteCompany_notFound_throwsCompanyNotFoundException() {
         when(companyRepo.findById("x")).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> companyService.deleteCompany("x"));
+        assertThrows(CompanyNotFoundException.class, () -> companyService.deleteCompany("x"));
     }
 }

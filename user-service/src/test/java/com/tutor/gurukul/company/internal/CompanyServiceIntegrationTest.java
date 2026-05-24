@@ -1,6 +1,8 @@
 package com.tutor.gurukul.company.internal;
 
 import com.tutor.gurukul.TestcontainersConfiguration;
+import com.tutor.gurukul.company.CompanyService;
+import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +62,7 @@ class CompanyServiceIntegrationTest {
     }
 
     @Test
-    void getCompanyById_returnsResponse() {
+    void getCompanyById_returnsResponse() throws CompanyNotFoundException {
         Company toSave = Company.builder().companyName("X").email("x@x").build();
         Company saved = companyRepo.save(toSave);
 
@@ -71,7 +73,7 @@ class CompanyServiceIntegrationTest {
     }
 
     @Test
-    void updateCompany_updatesFields() {
+    void updateCompany_updatesFields() throws CompanyNotFoundException {
         Company saved = companyRepo.save(Company.builder().companyName("Old").email("old@old").build());
 
         var req = CompanyRequest.builder().name("New").email("new@e").description("d").websiteUrl("w").logoUrl("l").build();
@@ -83,7 +85,7 @@ class CompanyServiceIntegrationTest {
     }
 
     @Test
-    void deleteCompany_removesEntity() {
+    void deleteCompany_removesEntity() throws CompanyNotFoundException {
         Company saved = companyRepo.save(Company.builder().companyName("Del").email("d@d").build());
         companyService.deleteCompany(saved.getCompanyId());
         assertFalse(companyRepo.findById(saved.getCompanyId()).isPresent());
@@ -91,6 +93,6 @@ class CompanyServiceIntegrationTest {
 
     @Test
     void deleteCompany_nonexistent_throws() {
-        assertThrows(IllegalArgumentException.class, () -> companyService.deleteCompany("no-such-id"));
+        assertThrows(CompanyNotFoundException.class, () -> companyService.deleteCompany("no-such-id"));
     }
 }

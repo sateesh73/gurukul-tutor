@@ -2,4 +2,3 @@ spring:
   sql:
     init:
       mode: always
-      locations: classpath:schema.sql

@@ -1,10 +1,15 @@
 package com.tutor.gurukul.company.internal;
 
+import com.tutor.gurukul.company.CompanyService;
+import com.tutor.gurukul.company.exception.CompanyAlreadyExistsException;
+import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Implementation of {@link CompanyService} that provides business logic for managing companies.
@@ -49,13 +54,13 @@ class CompanyServiceImpl implements CompanyService {
         log.info("Creating company: {}", companyRequest.name());
         try {
             if (companyRepo.findById(companyRequest.name()).isPresent()) {
-                throw new IllegalArgumentException("Company with name " + companyRequest.name() + " already exists");
+                throw new CompanyAlreadyExistsException("Company with name " + companyRequest.name() + " already exists");
             }
             var company = companyRequestTo(companyRequest);
             companyRepo.save(company);
         } catch (Exception e) {
             log.error("Error while creating company: {}", e.getMessage());
-            throw new IllegalArgumentException("Failed to create company", e);
+            throw new RuntimeException("Failed to create company", e);
         }
 
     }
@@ -67,7 +72,7 @@ class CompanyServiceImpl implements CompanyService {
      * - Uses {@code companyRepo.findById(companyId)} to fetch the entity.
      * - Converts the entity to {@link CompanyResponse} using {@link #companyResponseTo(Company)}.
      * - If no entity is found, this implementation calls {@code Optional.orElseThrow()},
-     *   which will throw {@link java.util.NoSuchElementException}.
+     *   which will throw {@link CompanyNotFoundException}.
      *
      * <p>Notes:
      * - Consider throwing a more specific domain exception (e.g. {@code CompanyNotFoundException})
@@ -75,14 +80,14 @@ class CompanyServiceImpl implements CompanyService {
      *
      * @param companyId the identifier of the company to retrieve; must not be {@code null}.
      * @return the {@link CompanyResponse} corresponding to the persisted company.
-     * @throws java.util.NoSuchElementException if the company with {@code companyId} does not exist.
+     * @throws CompanyNotFoundException if the company with {@code companyId} does not exist.
      */
     @Override
-    public CompanyResponse getCompanyById(String companyId) {
+    public CompanyResponse getCompanyById(String companyId) throws CompanyNotFoundException {
         log.info("Retrieving company by ID: {}", companyId);
         return companyRepo.findById(companyId)
                 .map(this::companyResponseTo)
-                .orElseThrow();
+                .orElseThrow(() -> new CompanyNotFoundException("Company with ID " + companyId + " not found"));
     }
 
     /**
@@ -103,15 +108,13 @@ class CompanyServiceImpl implements CompanyService {
      *
      * @param companyId      the identifier of the company to update; must not be {@code null}.
      * @param companyRequest the request containing updated company details.
-     * @throws java.util.NoSuchElementException if the company with {@code companyId} does not exist (recommended).
-     * @throws IllegalArgumentException if {@code companyRequest} is invalid (recommended).
      */
     @Override
-    public void updateCompany(String companyId, CompanyRequest companyRequest) {
+    public void updateCompany(String companyId, CompanyRequest companyRequest) throws CompanyNotFoundException {
         log.info("Updating company with ID: {}", companyId);
+        var company = companyRepo.findById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company with ID " + companyId + " not found"));
         try {
-            var company = companyRepo.findById(companyId)
-                    .orElseThrow(() -> new IllegalArgumentException("Company with ID " + companyId + " not found"));
             var updatedCompany = Company.builder()
                     .companyId(company.getCompanyId())
                     .companyName(companyRequest.name())
@@ -123,7 +126,7 @@ class CompanyServiceImpl implements CompanyService {
             companyRepo.save(updatedCompany);
         } catch (Exception e) {
             log.error("Validation error while updating company: {}", e.getMessage());
-            throw new IllegalArgumentException("Failed to update company: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to update company: " + e.getMessage(), e);
         }
     }
 
@@ -143,10 +146,21 @@ class CompanyServiceImpl implements CompanyService {
      * @param companyId the identifier of the company to delete; must not be {@code null}.
      */
     @Override
-    public void deleteCompany(String companyId) {
+    public void deleteCompany(String companyId) throws CompanyNotFoundException {
         companyRepo.findById(companyId)
-                .orElseThrow(() -> new IllegalArgumentException("Company with ID " + companyId + " not found"));
+                .orElseThrow(() -> new CompanyNotFoundException("Company with ID " + companyId + " not found"));
         companyRepo.deleteById(companyId);
+    }
+
+    /**
+     * Retrieves all companies and converts them to a list of DTOs.
+     */
+    @Override
+    public List<CompanyResponse> getAllCompanies() {
+        log.info("Retrieving all companies");
+        return companyRepo.findAll().stream()
+                .map(this::companyResponseTo)
+                .toList();
     }
 
     /**
