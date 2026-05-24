@@ -37,7 +37,7 @@ import lombok.*;
  *   being compatible with the generation strategy).
  */
 @Entity
-@Table(name = "t_company")
+@Table(name = "t_company", schema = "gurukul")
 @Data
 @AllArgsConstructor
 @Builder

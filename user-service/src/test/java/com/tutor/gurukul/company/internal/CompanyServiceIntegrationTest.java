@@ -44,7 +44,7 @@ class CompanyServiceIntegrationTest {
 
         List<Company> all = companyRepo.findAll();
         assertEquals(1, all.size());
-        Company saved = all.get(0);
+        Company saved = all.getFirst();
         assertEquals("Acme", saved.getCompanyName());
         assertEquals("info@acme.com", saved.getEmail());
     }
