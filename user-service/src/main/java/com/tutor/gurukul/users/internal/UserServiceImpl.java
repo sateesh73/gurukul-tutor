@@ -160,14 +160,14 @@ class UserServiceImpl implements UserService {
      *
      * @param companyId the UserRequest object containing the address details to be converted.
      */
-    @Override
     @Transactional
-    public void deleteUsersByCompanyId(String companyId) {
+    @Override
+    public void deleteUsersByCompanyId(String companyId) throws UserNotFoundException {
         log.info("Deleting users for company with ID {}", companyId);
         var users = userRepo.findByCompanyId(companyId);
         if (users.isEmpty()) {
             log.info("No users found with company with ID {}", companyId);
-            return;
+            throw new UserNotFoundException("User with company ID " + companyId + " not found");
         }
         userRepo.deleteAll(users.get());
         log.info("Deleted {} users for company with ID {}", users.get().size(), companyId);

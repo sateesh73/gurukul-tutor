@@ -4,6 +4,7 @@ import com.tutor.gurukul.company.exception.CompanyAlreadyExistsException;
 import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
+import com.tutor.gurukul.users.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -115,7 +116,7 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    void deleteCompany_success_deletesById() throws CompanyNotFoundException {
+    void deleteCompany_success_deletesById() throws CompanyNotFoundException, UserNotFoundException {
         var existing = Company.builder().companyId("id-1").companyName("Acme").email("e@e").build();
         when(companyRepo.findById("id-1")).thenReturn(Optional.of(existing));
 

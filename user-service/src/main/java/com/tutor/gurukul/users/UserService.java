@@ -3,6 +3,7 @@ package com.tutor.gurukul.users;
 import com.tutor.gurukul.users.exception.UserNotFoundException;
 import com.tutor.gurukul.users.model.UserRequest;
 import com.tutor.gurukul.users.model.UserResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -70,4 +71,13 @@ public interface UserService {
      * @throws UserNotFoundException if the companyId is null.
      */
     List<UserResponse> getUsersByCompanyId(String companyId) throws UserNotFoundException;
+
+    /**
+     * Deletes all users associated with a specific company ID.
+     *
+     * @param companyId the ID of the company whose users are to be deleted; must not be null.
+     * @throws UserNotFoundException if the companyId is null.
+     */
+    @Transactional
+    void deleteUsersByCompanyId(String companyId) throws UserNotFoundException;
 }

@@ -4,6 +4,7 @@ import com.tutor.gurukul.company.exception.CompanyAlreadyExistsException;
 import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
+import com.tutor.gurukul.users.exception.UserNotFoundException;
 
 import java.util.List;
 
@@ -48,7 +49,7 @@ public interface CompanyService {
      * @param companyId the ID of the company to delete; must not be null.
      * @throws CompanyNotFoundException if the companyId is null.
      */
-    void deleteCompany(String companyId) throws CompanyNotFoundException;
+    void deleteCompany(String companyId) throws CompanyNotFoundException, UserNotFoundException;
     /**
      * Retrieves all companies.
      *

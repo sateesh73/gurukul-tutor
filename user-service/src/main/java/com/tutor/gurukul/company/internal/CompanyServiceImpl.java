@@ -5,6 +5,8 @@ import com.tutor.gurukul.company.exception.CompanyAlreadyExistsException;
 import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
+import com.tutor.gurukul.users.UserService;
+import com.tutor.gurukul.users.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ class CompanyServiceImpl implements CompanyService {
      * as appropriate for the application.
      */
     private final CompanyRepo companyRepo;
+    private final UserService userService;
 
     /**
      * Creates a new company from the given {@link CompanyRequest}.
@@ -146,9 +149,14 @@ class CompanyServiceImpl implements CompanyService {
      * @param companyId the identifier of the company to delete; must not be {@code null}.
      */
     @Override
-    public void deleteCompany(String companyId) throws CompanyNotFoundException {
+    public void deleteCompany(String companyId) throws CompanyNotFoundException, UserNotFoundException {
         companyRepo.findById(companyId)
                 .orElseThrow(() -> new CompanyNotFoundException("Company with ID " + companyId + " not found"));
+        try {
+            userService.deleteUsersByCompanyId(companyId);
+        } catch (UserNotFoundException e) {
+            log.warn("No users found for company ID {}: {}", companyId, e.getMessage());
+        }
         companyRepo.deleteById(companyId);
     }
 
