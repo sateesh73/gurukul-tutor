@@ -1,9 +1,9 @@
 package com.tutor.gurukul.company.internal;
 
-import com.tutor.gurukul.company.exception.CompanyAlreadyExistsException;
 import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
+import com.tutor.gurukul.users.UserService;
 import com.tutor.gurukul.users.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,6 +27,9 @@ class CompanyServiceImplTest {
 
     @InjectMocks
     CompanyServiceImpl companyService;
+
+    @Mock
+    UserService userService;
 
     @Test
     void createCompany_success_savesEntity() {

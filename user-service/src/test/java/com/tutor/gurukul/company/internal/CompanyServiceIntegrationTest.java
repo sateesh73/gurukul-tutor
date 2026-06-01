@@ -5,6 +5,7 @@ import com.tutor.gurukul.company.CompanyService;
 import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
+import com.tutor.gurukul.users.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +86,7 @@ class CompanyServiceIntegrationTest {
     }
 
     @Test
-    void deleteCompany_removesEntity() throws CompanyNotFoundException {
+    void deleteCompany_removesEntity() throws CompanyNotFoundException, UserNotFoundException {
         Company saved = companyRepo.save(Company.builder().companyName("Del").email("d@d").build());
         companyService.deleteCompany(saved.getCompanyId());
         assertFalse(companyRepo.findById(saved.getCompanyId()).isPresent());

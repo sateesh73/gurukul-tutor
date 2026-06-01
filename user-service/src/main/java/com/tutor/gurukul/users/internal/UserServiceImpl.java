@@ -165,7 +165,7 @@ class UserServiceImpl implements UserService {
     public void deleteUsersByCompanyId(String companyId) throws UserNotFoundException {
         log.info("Deleting users for company with ID {}", companyId);
         var users = userRepo.findByCompanyId(companyId);
-        if (users.isEmpty()) {
+        if (users.isPresent() && users.get().isEmpty()) {
             log.info("No users found with company with ID {}", companyId);
             throw new UserNotFoundException("User with company ID " + companyId + " not found");
         }
