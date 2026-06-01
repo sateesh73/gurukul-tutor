@@ -23,7 +23,7 @@ class UserServiceImpl implements UserService {
      * Creates a new user based on the provided UserRequest.
      *
      * @param userRequest the request object containing user details; must not be null and should contain required fields (e.g. name, email).
-     * @throws com.tutor.gurukul.users.exception.UserAlreadyExist if the userRequest is invalid or if a user with the same email already exists.
+     * @throws UserAlreadyExist if the userRequest is invalid or if a user with the same email already exists.
      */
     @Override
     public void createUser(UserRequest userRequest) throws UserAlreadyExist {
@@ -147,7 +147,7 @@ class UserServiceImpl implements UserService {
         var users = userRepo.findByCompanyId(companyId);
         if (users.isEmpty()) {
             log.info("No users found for company with ID {}", companyId);
-            return List.of();
+            throw new UserNotFoundException("User with company ID " + companyId + " not found");
         }
         return users.get().stream()
                 .map(this::userResponseTo)
@@ -158,8 +158,7 @@ class UserServiceImpl implements UserService {
      * Helper method to convert UserRequest to Address entity.
      * This method takes a UserRequest object and maps its address-related fields to an Address entity, which can then be used for persistence or further processing within the service layer.
      *
-     * @param userRequest the UserRequest object containing the address details to be converted.
-     * @return an Address entity populated with the address details from the UserRequest.
+     * @param companyId the UserRequest object containing the address details to be converted.
      */
     @Override
     @Transactional
@@ -167,7 +166,7 @@ class UserServiceImpl implements UserService {
         log.info("Deleting users for company with ID {}", companyId);
         var users = userRepo.findByCompanyId(companyId);
         if (users.isEmpty()) {
-            log.info("No users found for company with ID {}", companyId);
+            log.info("No users found with company with ID {}", companyId);
             return;
         }
         userRepo.deleteAll(users.get());
