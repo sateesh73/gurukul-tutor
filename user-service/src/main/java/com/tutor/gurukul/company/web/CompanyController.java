@@ -4,6 +4,7 @@ import com.tutor.gurukul.company.CompanyService;
 import com.tutor.gurukul.company.exception.CompanyNotFoundException;
 import com.tutor.gurukul.company.model.CompanyRequest;
 import com.tutor.gurukul.company.model.CompanyResponse;
+import com.tutor.gurukul.users.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -88,7 +89,7 @@ class CompanyController {
      * @return a ResponseEntity with HTTP status 204 No Content if the deletion is successful; returns an appropriate error status if the request is invalid or if the company is not found.
      */
     @DeleteMapping("/{companyId}")
-    ResponseEntity<Void> deleteCompany(@PathVariable String companyId) throws CompanyNotFoundException {
+    ResponseEntity<Void> deleteCompany(@PathVariable String companyId) throws CompanyNotFoundException, UserNotFoundException {
         companyService.deleteCompany(companyId);
         return ResponseEntity.noContent().build();
     }
