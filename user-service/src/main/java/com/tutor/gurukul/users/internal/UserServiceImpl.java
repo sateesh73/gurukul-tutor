@@ -8,6 +8,7 @@ import com.tutor.gurukul.users.model.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -160,6 +161,19 @@ class UserServiceImpl implements UserService {
      * @param userRequest the UserRequest object containing the address details to be converted.
      * @return an Address entity populated with the address details from the UserRequest.
      */
+    @Override
+    @Transactional
+    public void deleteUsersByCompanyId(String companyId) {
+        log.info("Deleting users for company with ID {}", companyId);
+        var users = userRepo.findByCompanyId(companyId);
+        if (users.isEmpty()) {
+            log.info("No users found for company with ID {}", companyId);
+            return;
+        }
+        userRepo.deleteAll(users.get());
+        log.info("Deleted {} users for company with ID {}", users.get().size(), companyId);
+    }
+
     private Address addressTo(UserRequest userRequest) {
         return Address.builder()
                 .street(userRequest.street())

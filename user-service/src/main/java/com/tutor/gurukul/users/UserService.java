@@ -70,4 +70,10 @@ public interface UserService {
      * @throws UserNotFoundException if the companyId is null.
      */
     List<UserResponse> getUsersByCompanyId(String companyId) throws UserNotFoundException;
+    /**
+     * Deletes all users associated with the specified company ID.
+     *
+     * @param companyId the ID of the company whose users should be deleted; must not be null.
+     */
+    void deleteUsersByCompanyId(String companyId);
 }
