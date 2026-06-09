@@ -155,22 +155,31 @@ class UserServiceImpl implements UserService {
     }
 
     /**
-     * Helper method to convert UserRequest to Address entity.
-     * This method takes a UserRequest object and maps its address-related fields to an Address entity, which can then be used for persistence or further processing within the service layer.
+     * Deletes all users that belong to the given companyId.
+     * <p>
+     * This method validates the input and then safely resolves the repository result without
+     * calling Optional.get() unguarded to avoid NoSuchElementException/NPE.
+     * If no users are found for the company, a {@link UserNotFoundException} is thrown.
      *
-     * @param companyId the UserRequest object containing the address details to be converted.
+     * @param companyId the id of the company whose users should be deleted; must not be null
+     * @throws UserNotFoundException when companyId is null or no users exist for the company
      */
     @Transactional
     @Override
     public void deleteUsersByCompanyId(String companyId) throws UserNotFoundException {
         log.info("Deleting users for company with ID {}", companyId);
-        var users = userRepo.findByCompanyId(companyId);
-        if (users.isPresent() && users.get().isEmpty()) {
-            log.info("No users found with company with ID {}", companyId);
-            throw new UserNotFoundException("User with company ID " + companyId + " not found");
+
+        if (companyId == null) {
+            log.warn("companyId is null");
+            throw new UserNotFoundException("companyId must not be null");
         }
-        userRepo.deleteAll(users.get());
-        log.info("Deleted {} users for company with ID {}", users.get().size(), companyId);
+
+        var users = userRepo.findByCompanyId(companyId)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new UserNotFoundException("User with company ID " + companyId + " not found"));
+
+        userRepo.deleteAll(users);
+        log.info("Deleted {} users for company with ID {}", users.size(), companyId);
     }
 
     private Address addressTo(UserRequest userRequest) {
