@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+target/
+*.jar
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+# Maven
+.m2/
+dependency-list.txt
+pom.xml.releaseBackup
+
+# Test
+/test
+/test-classes
+/test-classes
+
+# Documentation
+*.md
+!.dockerignore
+
+# Docker
+docker-compose.override.yml
+
+# OS
+*.log
+*.tmp

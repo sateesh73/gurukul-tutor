@@ -1,0 +1,29 @@
+services:
+  auth-service:
+    build:
+      context: ..
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=authdb
+      - DB_USERNAME=authuser
+      - DB_PASSWORD=authpass
+      - SERVER_PORT=8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - gurukul-net
+
+networks:
+  gurukul-net:
+    external: true
+    name: infra_gurukul-net
