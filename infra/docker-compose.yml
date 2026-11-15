@@ -1,0 +1,61 @@
+# Infrastructure for gurukul-tutor services.
+# Start with:  docker compose -f infra/docker-compose.yml up -d
+# Stop with:   docker compose -f infra/docker-compose.yml down
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: gurukul-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-authdb}
+      POSTGRES_USER: ${POSTGRES_USER:-authuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-authpass}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-authuser} -d ${POSTGRES_DB:-authdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gurukul-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.2
+    container_name: gurukul-keycloak
+    restart: unless-stopped
+    environment:
+      # Bootstrap Admin Credentials (Keycloak 26+ format)
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+
+      # PostgreSQL Database Configuration (Quarkus format)
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-authdb}
+      KC_DB_USERNAME: ${POSTGRES_USER:-authuser}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-authpass}
+
+      # Hostname & HTTP settings for local dev
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    command: start-dev
+    ports:
+      - "${KEYCLOAK_PORT:-8081}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - gurukul-net
+
+volumes:
+  postgres-data:
+
+networks:
+  gurukul-net:
+    name: gurukul-net
+    driver: bridge

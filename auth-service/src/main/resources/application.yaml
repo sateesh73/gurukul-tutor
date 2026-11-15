@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:authdb}
+    username: ${DB_USERNAME:authuser}
+    password: ${DB_PASSWORD:authpass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak
+            client-id: ${KEYCLOAK_CLIENT_ID:auth-service}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:gurukul-auth-service-secret-change-me}
+            authorization-grant-type: authorization_code
+            scope:
+              - openid
+              - profile
+              - email
+              - roles
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          keycloak:
+            # Browser-facing URL (where the user's browser is redirected)
+            authorization-uri: ${KEYCLOAK_BROWSER_URL:http://localhost:8081}/realms/${KEYCLOAK_REALM:gurukul}/protocol/openid-connect/auth
+            # Internal backchannel URLs (called by auth-service container -> keycloak container)
+            token-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:gurukul}/protocol/openid-connect/token
+            user-info-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:gurukul}/protocol/openid-connect/userinfo
+            jwk-set-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:gurukul}/protocol/openid-connect/certs
+            user-name-attribute: preferred_username
+      resourceserver:
+        jwt:
+          # Validates the 'iss' claim inside the JWT (must match browser-facing URL)
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/gurukul}
+          # Fetches public keys over the internal Docker network without calling localhost:8081
+          jwk-set-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8081}/realms/${KEYCLOAK_REALM:gurukul}/protocol/openid-connect/certs
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      base-path: "/actuator"
+    exposure:
+      include: "health,info,metrics,env"
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.gurukul.authservice: DEBUG
+    org.springframework: INFO
+    org.springframework.security: DEBUG
+    org.hibernate: DEBUG
