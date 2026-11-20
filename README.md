@@ -184,6 +184,7 @@ make auth-service-clean
 | :--- | :--- |
 | `make keycloak-token-client` | Fetches a signed Keycloak JWT using `client_credentials` grant for `auth-service`. |
 | `make keycloak-token-user` | Fetches a signed Keycloak JWT using `password` grant for user `sateesh`. |
+| `make keycloak-init-user` | Provisions default admin user `sateesh` and assign `ADMIN` & `GURUKUL_ADMIN` roles in Keycloak. |
 | `make git-status` | Displays git working tree status. |
 
 ---

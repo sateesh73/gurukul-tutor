@@ -191,7 +191,7 @@ keycloak-token-client: ## [TOOL] Fetch Keycloak JWT using client_credentials gra
 		-H "Content-Type: application/x-www-form-urlencoded" \
 		-d "grant_type=client_credentials" \
 		-d "client_id=auth-service" \
-		-d "client_secret=gurukul-auth-service-secret-change-me" | jq -r .access_token
+		-d "client_secret=gurukul-auth-service-secret-change-me" | jq -re 'if .access_token then .access_token else error(.error_description // .error // "Failed to fetch client token") end'
 
 keycloak-token-user: ## [TOOL] Fetch Keycloak JWT using password grant for user sateesh
 	@curl -s -X POST "http://localhost:8081/realms/gurukul/protocol/openid-connect/token" \
@@ -200,7 +200,40 @@ keycloak-token-user: ## [TOOL] Fetch Keycloak JWT using password grant for user 
 		-d "client_id=auth-service" \
 		-d "client_secret=gurukul-auth-service-secret-change-me" \
 		-d "username=sateesh" \
-		-d "password=password123" | jq -r .access_token
+		-d "password=password123" | jq -re 'if .access_token then .access_token else error(.error_description // .error // "Failed to fetch user token: user sateesh may not exist in Keycloak. Run make keycloak-init-user") end'
+
+keycloak-init-user: ## [TOOL] Provision default admin user 'sateesh' and roles in Keycloak
+	@echo "Provisioning user 'sateesh' in Keycloak realm 'gurukul'..."
+	@ADMIN_TOKEN=$$(curl -s -X POST "http://localhost:8081/realms/master/protocol/openid-connect/token" \
+		-d "grant_type=password" \
+		-d "client_id=admin-cli" \
+		-d "username=admin" \
+		-d "password=admin" | jq -r .access_token); \
+	if [ -z "$$ADMIN_TOKEN" ] || [ "$$ADMIN_TOKEN" = "null" ]; then \
+		echo "Error: Unable to connect to Keycloak admin API at http://localhost:8081"; exit 1; \
+	fi; \
+	curl -s -X POST -H "Authorization: Bearer $$ADMIN_TOKEN" -H "Content-Type: application/json" \
+		-d '{"name": "ADMIN", "description": "Administrator role"}' \
+		http://localhost:8081/admin/realms/gurukul/roles > /dev/null 2>&1 || true; \
+	curl -s -X POST -H "Authorization: Bearer $$ADMIN_TOKEN" -H "Content-Type: application/json" \
+		-d '{"name": "GURUKUL_ADMIN", "description": "Gurukul Super Administrator role"}' \
+		http://localhost:8081/admin/realms/gurukul/roles > /dev/null 2>&1 || true; \
+	USER_ID=$$(curl -s -H "Authorization: Bearer $$ADMIN_TOKEN" "http://localhost:8081/admin/realms/gurukul/users?username=sateesh" | jq -r '.[0].id // empty'); \
+	if [ -z "$$USER_ID" ]; then \
+		curl -s -X POST -H "Authorization: Bearer $$ADMIN_TOKEN" -H "Content-Type: application/json" \
+			-d '{"username": "sateesh", "enabled": true, "email": "sateesh@gurukul.com", "firstName": "Sateesh", "lastName": "Kumar", "emailVerified": true, "credentials": [{"type": "password", "value": "password123", "temporary": false}]}' \
+			http://localhost:8081/admin/realms/gurukul/users; \
+		USER_ID=$$(curl -s -H "Authorization: Bearer $$ADMIN_TOKEN" "http://localhost:8081/admin/realms/gurukul/users?username=sateesh" | jq -r '.[0].id // empty'); \
+	else \
+		curl -s -X PUT -H "Authorization: Bearer $$ADMIN_TOKEN" -H "Content-Type: application/json" \
+			-d '{"type": "password", "value": "password123", "temporary": false}' \
+			http://localhost:8081/admin/realms/gurukul/users/$$USER_ID/reset-password; \
+	fi; \
+	ROLES=$$(curl -s -H "Authorization: Bearer $$ADMIN_TOKEN" http://localhost:8081/admin/realms/gurukul/roles | jq '[.[] | select(.name == "ADMIN" or .name == "GURUKUL_ADMIN")]'); \
+	curl -s -X POST -H "Authorization: Bearer $$ADMIN_TOKEN" -H "Content-Type: application/json" \
+		-d "$$ROLES" \
+		http://localhost:8081/admin/realms/gurukul/users/$$USER_ID/role-mappings/realm > /dev/null 2>&1 || true; \
+	echo "User 'sateesh' successfully configured in Keycloak with ADMIN & GURUKUL_ADMIN roles."
 
 git-status: ## [TOOL] Display git working tree status
 	git status
@@ -211,6 +244,6 @@ git-status: ## [TOOL] Display git working tree status
 .PHONY: help up down restart build test clean ps health \
         infra infra-up infra-down infra-restart infra-logs infra-ps \
         apps-up apps-down apps-logs \
-        keycloak-token-client keycloak-token-user git-status \
+        keycloak-token-client keycloak-token-user keycloak-init-user git-status \
         $(SERVICES) \
         $(foreach svc,$(SERVICES),$(svc)-up $(svc)-down $(svc)-build $(svc)-test $(svc)-clean $(svc)-run $(svc)-logs $(svc)-restart)
